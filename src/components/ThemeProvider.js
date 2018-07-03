@@ -1,6 +1,6 @@
-import { Children, Component } from 'react'
+import React, { Children, Component } from 'react'
 import PropTypes from 'prop-types'
-import themrShape from '../utils/themr-shape'
+import ThemeContext from './ThemeContext'
 
 export default class ThemeProvider extends Component {
   static propTypes = {
@@ -12,19 +12,11 @@ export default class ThemeProvider extends Component {
     theme: {}
   }
 
-  static childContextTypes = {
-    themr: themrShape.isRequired
-  }
-
-  getChildContext() {
-    return {
-      themr: {
-        theme: this.props.theme
-      }
-    }
-  }
-
   render() {
-    return Children.only(this.props.children)
+    return (
+      <ThemeContext.Provider value={this.props.theme}>
+        {Children.only(this.props.children)}
+      </ThemeContext.Provider>
+    )
   }
 }

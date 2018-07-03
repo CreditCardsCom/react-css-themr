@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import hoistNonReactStatics from 'hoist-non-react-statics'
 import invariant from 'invariant'
+import ThemeContext from './ThemeContext';
 
 /**
  * @typedef {Object.<string, TReactCSSThemrTheme>} TReactCSSThemrTheme
@@ -56,10 +57,6 @@ export default (componentName, localTheme, options = {}) => (ThemedComponent) =>
   class Themed extends Component {
     static displayName = `Themed${ThemedComponent.name}`;
 
-    static contextTypes = {
-      themr: PropTypes.object
-    }
-
     static propTypes = {
       ...ThemedComponent.propTypes,
       composeTheme: PropTypes.oneOf([ COMPOSE_DEEPLY, COMPOSE_SOFTLY, DONT_COMPOSE ]),
@@ -107,8 +104,8 @@ export default (componentName, localTheme, options = {}) => (ThemedComponent) =>
     }
 
     getContextTheme() {
-      return this.context.themr
-        ? this.context.themr.theme[config.componentName]
+      return this.contextTheme
+        ? this.contextTheme[config.componentName]
         : {}
     }
 
@@ -132,20 +129,28 @@ export default (componentName, localTheme, options = {}) => (ThemedComponent) =>
         : this.getThemeNotComposed(props)
     }
 
-    componentWillReceiveProps(nextProps) {
-      if (
-        nextProps.composeTheme !== this.props.composeTheme ||
-        nextProps.theme !== this.props.theme ||
-        nextProps.themeNamespace !== this.props.themeNamespace
-      ) {
-        this.theme_ = this.calcTheme(nextProps)
-      }
-    }
+    // componentWillReceiveProps(nextProps) {
+    //   if (
+    //     nextProps.composeTheme !== this.props.composeTheme ||
+    //     nextProps.theme !== this.props.theme ||
+    //     nextProps.themeNamespace !== this.props.themeNamespace
+    //   ) {
+    //     this.theme_ = this.calcTheme(nextProps)
+    //   }
+    // }
 
     render() {
-      return React.createElement(
-        ThemedComponent,
-        this.props.mapThemrProps(this.props, this.theme_)
+      return (
+        <ThemeContext.Consumer>
+          {contextTheme => {
+            this.contextTheme = contextTheme
+
+            return React.createElement(
+              ThemedComponent,
+              this.props.mapThemrProps(this.props, this.calcTheme(this.props))
+            )
+          }}
+        </ThemeContext.Consumer>
       )
     }
   }
