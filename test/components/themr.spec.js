@@ -5,27 +5,13 @@ import TestUtils from 'react-dom/test-utils'
 import sinon from 'sinon'
 import { render } from 'react-dom'
 import shallowEqual from 'fbjs/lib/shallowEqual'
-import { themr, themeable } from '../../src/index'
+import { themr, themeable, ThemeProvider } from '../../src/index'
 
 describe('Themr decorator function', () => {
   class Passthrough extends Component {
     render() {
       const { theme, ...props } = this.props //eslint-disable-line no-unused-vars
       return <div ref={(node) => { this.rootNode = node }} {...props} />
-    }
-  }
-
-  class ProviderMock extends Component {
-    static childContextTypes = {
-      themr: PropTypes.object.isRequired
-    }
-
-    getChildContext() {
-      return { themr: { theme: this.props.theme } }
-    }
-
-    render() {
-      return Children.only(this.props.children)
     }
   }
 
@@ -40,9 +26,9 @@ describe('Themr decorator function', () => {
     }
 
     const tree = TestUtils.renderIntoDocument(
-      <ProviderMock theme={theme}>
+      <ThemeProvider theme={theme}>
         <Container />
-      </ProviderMock>
+      </ThemeProvider>
     )
 
     const container = TestUtils.findRenderedComponentWithType(tree, Container)
@@ -53,18 +39,21 @@ describe('Themr decorator function', () => {
     const containerTheme = { foo: 'foo_1234' }
     const theme = { Container: containerTheme }
 
-    @themr('Container')
-    class Container extends Component {
+    class Container_ extends Component {
       render() {
         return <Passthrough {...this.props} />
       }
     }
 
+    const Container = themr('Container')(Container_)
+
     const tree = TestUtils.renderIntoDocument(
-      <ProviderMock theme={theme}>
+      <ThemeProvider theme={theme}>
         <Container />
-      </ProviderMock>
+      </ThemeProvider>
     )
+
+    console.log(tree)
 
     const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough)
     expect(stub.props.theme).toEqual(containerTheme)
@@ -84,9 +73,9 @@ describe('Themr decorator function', () => {
     }
 
     const tree = TestUtils.renderIntoDocument(
-      <ProviderMock theme={theme}>
+      <ThemeProvider theme={theme}>
         <Container theme={containerThemeProps} />
-      </ProviderMock>
+      </ThemeProvider>
     )
 
     const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough)
@@ -107,9 +96,9 @@ describe('Themr decorator function', () => {
     }
 
     const tree = TestUtils.renderIntoDocument(
-      <ProviderMock theme={theme}>
+      <ThemeProvider theme={theme}>
         <Container />
-      </ProviderMock>
+      </ThemeProvider>
     )
 
     const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough)
@@ -129,9 +118,9 @@ describe('Themr decorator function', () => {
     }
 
     const tree = TestUtils.renderIntoDocument(
-      <ProviderMock theme={theme}>
+      <ThemeProvider theme={theme}>
         <Container theme={containerTheme2} />
-      </ProviderMock>
+      </ThemeProvider>
     )
 
     const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough)
@@ -152,9 +141,9 @@ describe('Themr decorator function', () => {
     }
 
     const tree = TestUtils.renderIntoDocument(
-      <ProviderMock theme={theme}>
+      <ThemeProvider theme={theme}>
         <Container theme={containerTheme2} />
-      </ProviderMock>
+      </ThemeProvider>
     )
 
     const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough)
@@ -175,9 +164,9 @@ describe('Themr decorator function', () => {
     }
 
     const tree = TestUtils.renderIntoDocument(
-      <ProviderMock theme={theme}>
+      <ThemeProvider theme={theme}>
         <Container theme={containerTheme2} />
-      </ProviderMock>
+      </ThemeProvider>
     )
 
     const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough)
@@ -197,9 +186,9 @@ describe('Themr decorator function', () => {
     }
 
     const tree = TestUtils.renderIntoDocument(
-      <ProviderMock theme={theme}>
+      <ThemeProvider theme={theme}>
         <Container theme={containerTheme2} composeTheme="deeply" />
-      </ProviderMock>
+      </ThemeProvider>
     )
 
     const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough)
@@ -220,9 +209,9 @@ describe('Themr decorator function', () => {
     }
 
     const tree = TestUtils.renderIntoDocument(
-      <ProviderMock theme={theme}>
+      <ThemeProvider theme={theme}>
         <Container theme={containerTheme2} composeTheme="softly" />
-      </ProviderMock>
+      </ThemeProvider>
     )
 
     const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough)
@@ -243,9 +232,9 @@ describe('Themr decorator function', () => {
     }
 
     const tree = TestUtils.renderIntoDocument(
-      <ProviderMock theme={theme}>
+      <ThemeProvider theme={theme}>
         <Container theme={containerTheme2} composeTheme={false} />
-      </ProviderMock>
+      </ThemeProvider>
     )
 
     const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough)
@@ -348,9 +337,9 @@ describe('Themr decorator function', () => {
     }
 
     expect(() => TestUtils.renderIntoDocument(
-      <ProviderMock theme={theme}>
+      <ThemeProvider theme={theme}>
         <Container themeNamespace="container"/>
-      </ProviderMock>
+      </ThemeProvider>
     )).toThrow(/Invalid themeNamespace use in react-css-themr. themeNamespace prop should be used only with theme prop./)
   })
 
@@ -368,9 +357,9 @@ describe('Themr decorator function', () => {
     }
 
     const tree = TestUtils.renderIntoDocument(
-      <ProviderMock theme={theme}>
+      <ThemeProvider theme={theme}>
         <Container theme={containerThemeProps} themeNamespace="container" />
-      </ProviderMock>
+      </ThemeProvider>
     )
 
     const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough)
@@ -527,6 +516,8 @@ describe('Themr decorator function', () => {
     const tree = TestUtils.renderIntoDocument(
       <Container/>
     )
+
+    console.log(TestUtils.findAllInRenderedTree(tree, () => true))
 
     const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough)
     expect(stub.props.themeNamespace).toNotExist()

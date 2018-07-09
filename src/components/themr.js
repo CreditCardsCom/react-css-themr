@@ -104,8 +104,8 @@ export default (componentName, localTheme, options = {}) => (ThemedComponent) =>
     }
 
     getContextTheme() {
-      return this.contextTheme
-        ? this.contextTheme[config.componentName]
+      return this.props.contextTheme
+        ? this.props.contextTheme[config.componentName]
         : {}
     }
 
@@ -119,7 +119,7 @@ export default (componentName, localTheme, options = {}) => (ThemedComponent) =>
         : themeable(
           themeable(this.getContextTheme(), config.localTheme),
           this.getNamespacedTheme(props)
-        )
+        );
     }
 
     calcTheme(props) {
@@ -129,35 +129,42 @@ export default (componentName, localTheme, options = {}) => (ThemedComponent) =>
         : this.getThemeNotComposed(props)
     }
 
-    // componentWillReceiveProps(nextProps) {
-    //   if (
-    //     nextProps.composeTheme !== this.props.composeTheme ||
-    //     nextProps.theme !== this.props.theme ||
-    //     nextProps.themeNamespace !== this.props.themeNamespace
-    //   ) {
-    //     this.theme_ = this.calcTheme(nextProps)
-    //   }
-    // }
+    componentWillReceiveProps(nextProps) {
+      if (
+        nextProps.composeTheme !== this.props.composeTheme ||
+        nextProps.theme !== this.props.theme ||
+        nextProps.themeNamespace !== this.props.themeNamespace
+      ) {
+        this.theme_ = this.calcTheme(nextProps)
+      }
+    }
 
     render() {
-      return (
-        <ThemeContext.Consumer>
-          {contextTheme => {
-            this.contextTheme = contextTheme
-
-            return React.createElement(
-              ThemedComponent,
-              this.props.mapThemrProps(this.props, this.calcTheme(this.props))
-            )
-          }}
-        </ThemeContext.Consumer>
+      return React.createElement(
+        ThemedComponent,
+        this.props.mapThemrProps(this.props, this.theme_)
       )
     }
   }
 
   Themed[THEMR_CONFIG] = config
 
-  return hoistNonReactStatics(Themed, ThemedComponent)
+  return withContext(hoistNonReactStatics(Themed, ThemedComponent))
+}
+
+function withContext(Themed) {
+  return function ThemedContext(props) {
+    return (
+      <ThemeContext.Consumer>
+        {contextTheme => (
+          React.createElement(Themed, {
+            ...props,
+            contextTheme
+          })
+        )}
+      </ThemeContext.Consumer>
+    )
+  }
 }
 
 /**
@@ -299,7 +306,8 @@ function defaultMapThemrProps(ownProps, theme) {
     composeTheme,   //eslint-disable-line no-unused-vars
     innerRef,
     themeNamespace, //eslint-disable-line no-unused-vars
-    mapThemrProps,  //eslint-disable-line no-unused-vars
+    mapThemrProps,  //eslint-disable-line no-unused-vars,
+    contextTheme,
     ...rest
   } = ownProps
 

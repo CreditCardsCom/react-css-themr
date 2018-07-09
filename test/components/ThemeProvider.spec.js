@@ -3,6 +3,7 @@ import expect from 'expect'
 import PropTypes from 'prop-types'
 import TestUtils from 'react-dom/test-utils'
 import { ThemeProvider } from '../../src/index'
+import ThemeContext from '../../src/components/ThemeContext'
 
 describe('ThemeProvider', () => {
   class Child extends Component {
@@ -45,7 +46,7 @@ describe('ThemeProvider', () => {
     }
   })
 
-  it('should add the theme to the child context', () => {
+  it('should add the ThemeContext.Provider', () => {
     const theme = {}
 
     TestUtils.renderIntoDocument(
@@ -57,13 +58,15 @@ describe('ThemeProvider', () => {
     const spy = expect.spyOn(console, 'error')
     const tree = TestUtils.renderIntoDocument(
       <ThemeProvider theme={theme}>
-        <Child />
+        <ThemeContext.Consumer>
+          {theme => <Child theme={theme} />}
+        </ThemeContext.Consumer>
       </ThemeProvider>
     )
     spy.destroy()
     expect(spy.calls.length).toBe(0)
 
     const child = TestUtils.findRenderedComponentWithType(tree, Child)
-    expect(child.context.themr.theme).toBe(theme)
+    expect(child.props.theme).toBe(theme)
   })
 })
